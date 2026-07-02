@@ -1,0 +1,12 @@
+# Rein lesender Viewer: DBF-Quelle read-only gemountet (Normalbetrieb).
+# SP5_READONLY ist im Image hart erzwungen; SP5_CORE_ONLY optional frei.
+services:
+  sp5-viewer:
+    image: ghcr.io/mschabhuettl/openschichtplaner5-viewer:latest
+    ports:
+      - "${SP5_VIEWER_PORT:-8080}:8000"
+    environment:
+      SP5_DB_PATH: /app/data
+      SP5_CORE_ONLY: ${SP5_CORE_ONLY:-false}
+    volumes:
+      - ${SP5_DB_PATH:?Pfad zu den DBF-Dateien}:/app/data:ro
