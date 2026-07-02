@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Build + Erzwingungs-Beweis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build image
+        run: docker build -t sp5viewer:ci .
+
+      - name: Read-only-Erzwingung trotz Override-Versuch
+        run: |
+          mkdir -p /tmp/db && chmod 777 /tmp/db
+          docker run -d --name viewer-ci -p 8000:8000 \
+            -e SP5_DEV_MODE=1 -e SP5_READONLY=0 \
+            -v /tmp/db:/app/data:ro sp5viewer:ci
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:8000/api/health >/dev/null && break
+            sleep 2
+          done
+          ro=$(curl -s http://127.0.0.1:8000/api/health | python3 -c "import sys,json;print(json.load(sys.stdin)['readonly'])")
+          if [ "$ro" != "True" ]; then
+            echo "::error::SP5_READONLY-Erzwingung durchbrochen (readonly=$ro trotz -e SP5_READONLY=0)"
+            docker logs viewer-ci; exit 1
+          fi
+          echo "Erzwingung bestätigt: readonly=$ro trotz Override-Versuch"
