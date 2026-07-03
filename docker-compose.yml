@@ -1,8 +1,11 @@
 # Rein lesender Viewer: DBF-Quelle read-only gemountet (Normalbetrieb).
 # SP5_READONLY ist im Image hart erzwungen; SP5_CORE_ONLY optional frei.
+# Das Image wird LOKAL gebaut (docker compose up -d --build) — es gibt
+# bewusst kein vorgebautes Registry-Image dieses Repos.
 services:
   sp5-viewer:
-    image: ghcr.io/mschabhuettl/openschichtplaner5-viewer:latest
+    build: .
+    image: openschichtplaner5-viewer:local
     ports:
       - "${SP5_VIEWER_PORT:-8080}:8000"
     environment:

@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Vertriebsmodell umgestellt: kein vorgebautes Registry-Image mehr — das
+  Image wird lokal gebaut (`docker compose up -d --build`); der
+  Release-/Publish-Workflow wurde entfernt, docker-compose baut jetzt aus
+  dem Repo statt ein Registry-Image zu ziehen. Versions-Tags/Releases
+  entfallen für dieses private Repo; maßgeblich ist der `APP_IMAGE`-Pin
+  im Dockerfile.
+
 ## [0.1.2] - 2026-07-03
 
 ### Changed
