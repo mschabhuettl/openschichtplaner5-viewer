@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-07-03
+
+### Changed
+
+- Basis-Image auf openschichtplaner5 1.21.39 (schnellerer Seitenaufbau,
+  Zusatzfelder im Mitarbeiter-Profil, sauberer Leerzustand in
+  „Mein Kalender" — alles in der Leseansicht wirksam).
+
 ## [0.1.1] - 2026-07-03
 
 ### Changed
