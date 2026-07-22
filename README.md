@@ -6,26 +6,32 @@ aber **garantiert ohne Schreibzugriff**: `SP5_READONLY` ist im Image hart
 erzwungen (auch `-e SP5_READONLY=0` wird überschrieben), die gebündelte API
 lehnt jede Schreibaktion serverseitig mit 403 ab — für alle Rollen.
 
-Dieses Repo liefert bewusst **kein vorgebautes Image** — das Image wird lokal
-aus dem öffentlichen App-Basis-Image gebaut (`FROM
-ghcr.io/mschabhuettl/openschichtplaner5:<Pin>` + Entrypoint-Shim).
+Vorgebaute Multi-Arch-Images (amd64/arm64) werden automatisch nach ghcr
+publiziert: `ghcr.io/mschabhuettl/openschichtplaner5-viewer` — Tags: `latest`
+sowie die App-Version, die das Image bündelt (z. B. `1.22.0`; der Viewer hat
+keinen eigenen Versionsraum, er IST die App in Nur-Lese-Konfiguration). Jeder
+Build beweist die Read-only-Erzwingung am publizierten Image, bevor er grün
+wird.
 
-## Schnellstart (lokaler Build)
+## Schnellstart
 
 ```bash
-git clone git@github.com:mschabhuettl/openschichtplaner5-viewer.git
+git clone https://github.com/mschabhuettl/openschichtplaner5-viewer.git
 cd openschichtplaner5-viewer
-SP5_DB_PATH=/pfad/zu/sp5/Daten docker compose up -d --build
+SP5_DB_PATH=/pfad/zu/sp5/Daten docker compose up -d
 ```
 
 Alternativ ohne Compose:
 
 ```bash
-docker build -t openschichtplaner5-viewer:local .
 docker run -d -p 8080:8000 \
   -v /pfad/zu/sp5/Daten:/app/data:ro \
-  openschichtplaner5-viewer:local
+  ghcr.io/mschabhuettl/openschichtplaner5-viewer:latest
 ```
+
+Lokal bauen statt Registry-Image: im `docker-compose.yml` die `build: .`-Zeile
+aktivieren und `docker compose up -d --build` (bzw.
+`docker build -t openschichtplaner5-viewer:local .`).
 
 Die DBF-Quelle wird **read-only** gemountet (Normalbetrieb) — der Viewer kann
 parallel zu einer schreibenden osp5-Instanz oder direkt auf einem Backup-/
@@ -36,5 +42,6 @@ den Original-Funktionsumfang. Architektur-Begründung (kein Fork):
 ## Aktualisieren
 
 Neue App-Version übernehmen = `APP_IMAGE`-Pin im [Dockerfile](Dockerfile)
-heben (macht der Workflow `update-pins` per Commit) und lokal neu bauen:
-`docker compose up -d --build`.
+heben — das erledigt der Workflow `update-pins` per Commit und stößt CI
+(Read-only-Beweis) und den Image-Build automatisch an. Betreiber ziehen dann
+einfach das neue Image (`docker compose pull && docker compose up -d`).

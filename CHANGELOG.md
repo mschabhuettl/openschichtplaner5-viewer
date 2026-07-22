@@ -4,12 +4,16 @@
 
 ### Changed
 
-- Vertriebsmodell umgestellt: kein vorgebautes Registry-Image mehr — das
-  Image wird lokal gebaut (`docker compose up -d --build`); der
-  Release-/Publish-Workflow wurde entfernt, docker-compose baut jetzt aus
-  dem Repo statt ein Registry-Image zu ziehen. Versions-Tags/Releases
-  entfallen für dieses private Repo; maßgeblich ist der `APP_IMAGE`-Pin
-  im Dockerfile.
+- **Öffentliches Repo mit publizierten Images.** Der Viewer wird als
+  vorgebautes Multi-Arch-Image (amd64/arm64) nach ghcr publiziert
+  (`ghcr.io/mschabhuettl/openschichtplaner5-viewer`, Tags `latest` + die
+  gebündelte App-Version; eigener Versionsraum entfällt weiterhin —
+  maßgeblich ist der `APP_IMAGE`-Pin im Dockerfile). `docker-compose.yml`
+  nutzt standardmäßig das Registry-Image (lokaler Build weiter möglich,
+  `build:`-Zeile aktivieren). Jeder Image-Build beweist die
+  `SP5_READONLY`-Erzwingung am publizierten Image; `update-pins` stößt nach
+  Pin-Bumps CI und Image-Build automatisch an. (Ersetzt das zwischenzeitliche
+  Nur-lokal-bauen-Modell, das nie über dieses Changelog hinauskam.)
 
 ## [0.1.2] - 2026-07-03
 

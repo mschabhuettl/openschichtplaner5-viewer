@@ -1,0 +1,81 @@
+name: Build & Push Docker Image
+
+# Baut das Viewer-Image (Konfigurations-Derivat des App-Images mit hart
+# erzwungenem SP5_READONLY) und publiziert es nach ghcr. Die Versions-Tags
+# spiegeln den APP_IMAGE-Pin im Dockerfile (der Viewer hat keinen eigenen
+# Versionsraum — er IST die App in Nur-Lese-Konfiguration).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:  # manueller/programmatischer Rebuild (z. B. nach Pin-Bump via update-pins)
+  schedule:
+    - cron: '30 3 * * 1'  # Montags 03:30 UTC — frisches App-Base-Image für Security-Updates
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: App-Pin-Version aus dem Dockerfile lesen
+        id: pin
+        run: |
+          VERSION=$(sed -n 's|.*openschichtplaner5:\([0-9.]*\)".*|\1|p' Dockerfile | head -1)
+          if [ -z "$VERSION" ]; then
+            echo "::error::APP_IMAGE-Pin nicht aus dem Dockerfile lesbar."
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/metadata-action@v6
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ steps.pin.outputs.version }},enable={{is_default_branch}}
+            type=sha,prefix=sha-
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Read-only-Erzwingung am publizierten Image beweisen
+        if: github.event_name != 'pull_request'
+        run: |
+          IMAGE=ghcr.io/${{ github.repository }}:${{ steps.pin.outputs.version }}
+          docker pull "$IMAGE"
+          mkdir -p /tmp/db && chmod 777 /tmp/db
+          docker run -d --name viewer-proof -p 8000:8000 \
+            -e SP5_DEV_MODE=1 -e SP5_READONLY=0 \
+            -v /tmp/db:/app/data:ro "$IMAGE"
+          for i in $(seq 1 60); do
+            curl -sf http://127.0.0.1:8000/api/health >/dev/null && break
+            sleep 2
+          done
+          ro=$(curl -s http://127.0.0.1:8000/api/health | python3 -c "import sys,json;print(json.load(sys.stdin)['readonly'])")
+          if [ "$ro" != "True" ]; then
+            echo "::error::SP5_READONLY-Erzwingung durchbrochen (readonly=$ro trotz -e SP5_READONLY=0)"
+            docker logs viewer-proof; exit 1
+          fi
+          echo "Erzwingung bestätigt: readonly=$ro trotz Override-Versuch"
