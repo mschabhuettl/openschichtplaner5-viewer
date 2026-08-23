@@ -39,13 +39,11 @@ jobs:
             echo "pushed=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: CI + Docker-Build anstoßen (Erzwingungs-Beweis + Image)
-        # GITHUB_TOKEN-Pushes lösen keine push-Workflows aus — ohne diese
-        # Dispatches liefe weder der Read-only-Beweis noch der Image-Build
-        # gegen den neuen App-Pin.
+      - name: CI anstoßen (Erzwingungs-Beweis)
+        # GITHUB_TOKEN-Pushes lösen keine push-Workflows aus — ohne diesen
+        # Dispatch liefe der Read-only-Beweis nicht gegen den neuen App-Pin.
         if: steps.push.outputs.pushed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh workflow run ci.yml --ref main
-          gh workflow run docker.yml --ref main

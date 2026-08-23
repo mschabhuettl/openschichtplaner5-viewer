@@ -4,16 +4,19 @@
 
 ### Changed
 
-- **Öffentliches Repo mit publizierten Images.** Der Viewer wird als
-  vorgebautes Multi-Arch-Image (amd64/arm64) nach ghcr publiziert
-  (`ghcr.io/mschabhuettl/openschichtplaner5-viewer`, Tags `latest` + die
-  gebündelte App-Version; eigener Versionsraum entfällt weiterhin —
-  maßgeblich ist der `APP_IMAGE`-Pin im Dockerfile). `docker-compose.yml`
-  nutzt standardmäßig das Registry-Image (lokaler Build weiter möglich,
-  `build:`-Zeile aktivieren). Jeder Image-Build beweist die
-  `SP5_READONLY`-Erzwingung am publizierten Image; `update-pins` stößt nach
-  Pin-Bumps CI und Image-Build automatisch an. (Ersetzt das zwischenzeitliche
-  Nur-lokal-bauen-Modell, das nie über dieses Changelog hinauskam.)
+- **Öffentliches Repo ohne publizierte Images.** Der Viewer publiziert keine
+  eigenen Docker-Images mehr (kein ghcr, kein PyPI) — das Repo liefert nur
+  Code, Dockerfile und docker-compose für den lokalen Build. Der
+  ghcr-Publish-Workflow ist entfernt, die bereits publizierten Viewer-Pakete
+  auf ghcr sind gelöscht. `docker-compose.yml` baut standardmäßig lokal
+  (`docker compose up -d --build`, Image-Name
+  `openschichtplaner5-viewer:local`). Das App-Basis-Image
+  (`ghcr.io/mschabhuettl/openschichtplaner5`, Version per `APP_IMAGE`-Pin)
+  wird weiterhin von ghcr gezogen — nur der Viewer selbst wird nicht
+  publiziert. Die CI beweist die `SP5_READONLY`-Erzwingung weiterhin am lokal
+  gebauten Image; `update-pins` hebt den Pin und stößt die CI an. (Ersetzt
+  den zwischenzeitlichen ghcr-Publish-Ansatz, der nie über dieses Changelog
+  hinauskam.)
 
 ## [0.1.2] - 2026-07-03
 
