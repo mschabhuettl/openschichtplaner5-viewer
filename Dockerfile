@@ -4,7 +4,7 @@
 # KEIN Fork: Konfigurations-Derivat des App-Images. Der Shim erzwingt
 # SP5_READONLY=1 unübersteuerbar; alles andere (Ansichten, Auth, Backends)
 # ist die unveränderte App. APP_IMAGE-Pin wird von update-pins nachgezogen.
-ARG APP_IMAGE="ghcr.io/mschabhuettl/openschichtplaner5:1.23.1"
+ARG APP_IMAGE="ghcr.io/mschabhuettl/openschichtplaner5:1.23.2"
 FROM ${APP_IMAGE}
 
 COPY viewer-entrypoint.sh /usr/local/bin/viewer-entrypoint.sh
